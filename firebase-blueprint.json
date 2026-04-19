@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "Blog": {
+      "title": "Blog Post",
+      "description": "A blog post entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the blog post" },
+        "desc": { "type": "string", "description": "Short description or excerpt" },
+        "content": { "type": "string", "description": "Full markdown content of the blog post" },
+        "date": { "type": "string", "description": "Formatted date string (e.g., Oct 12, 2025)" },
+        "readTime": { "type": "string", "description": "Estimated read time (e.g., 5 min read)" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" }
+      },
+      "required": ["title", "desc", "content", "date", "readTime", "createdAt"]
+    },
+    "Setting": {
+      "title": "Site Setting",
+      "description": "Global site settings like CV URL",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "description": "URL to the CV PDF" }
+      },
+      "required": ["url"]
+    }
+  },
+  "firestore": {
+    "/blogs/{blogId}": {
+      "schema": { "$ref": "#/entities/Blog" },
+      "description": "Collection of blog posts"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "Collection of site settings (e.g., settingId = 'cv')"
+    }
+  }
+}
