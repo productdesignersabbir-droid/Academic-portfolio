@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from '../firebase';
+import { auth, db, loginWithEmail, logout, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Trash2, Edit2, Plus, LogOut, Link as LinkIcon } from 'lucide-react';
 
 export function Admin() {
@@ -13,6 +13,10 @@ export function Admin() {
   
   const [isEditingBlog, setIsEditingBlog] = useState(false);
   const [currentBlog, setCurrentBlog] = useState({ id: '', title: '', desc: '', content: '', date: '', readTime: '' });
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -27,7 +31,6 @@ export function Admin() {
 
     const unsubscribeBlogs = onSnapshot(collection(db, 'blogs'), (snapshot) => {
       const blogData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Sort by date or createdAt if needed, but for now just set
       setBlogs(blogData);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'blogs');
@@ -46,6 +49,16 @@ export function Admin() {
       unsubscribeSettings();
     };
   }, [isAuthReady, user]);
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      await loginWithEmail(email, password);
+    } catch (error: any) {
+      setLoginError(error.message || 'Failed to login');
+    }
+  };
 
   const handleSaveCV = async () => {
     try {
@@ -98,14 +111,41 @@ export function Admin() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
-          <button 
-            onClick={loginWithGoogle}
-            className="w-full bg-[var(--color-accent)] text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Sign in with Google
-          </button>
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full max-w-md">
+          <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+          {loginError && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+              {loginError}
+            </div>
+          )}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input 
+                type="email" 
+                required 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[var(--color-accent)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input 
+                type="password" 
+                required 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[var(--color-accent)]"
+              />
+            </div>
+            <button 
+              type="submit"
+              className="w-full bg-[var(--color-accent)] text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors mt-2"
+            >
+              Sign In
+            </button>
+          </form>
         </div>
       </div>
     );
